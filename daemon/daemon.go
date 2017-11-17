@@ -224,7 +224,7 @@ func uploadCSVHandler(w http.ResponseWriter, r *http.Request) {
 		logger.Printf("Can't read file.\nReason: %v", err)
 		return
 	}
-	logger.Printf("%v %v", users, err)
+	logger.Println("CSV file has been parsed. Uploading to database")
 	switch r.Header.Get("Append-type") {
 	case "clear":
 		if err := controller.CleanRecords(); err != nil {
@@ -247,7 +247,7 @@ func uploadCSVHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		break
 	}
-	w.WriteHeader(http.StatusOK)
+
 	http.Redirect(w, r, "/api/v1/addressbook/", http.StatusFound)
 }
 
@@ -301,13 +301,17 @@ func populateUsers(input [][]string) ([]models.User, error) {
 		if len(item) != 5 {
 			continue
 		}
-		users = append(users, models.User{
+		user := models.User{
 			ID:        bson.ObjectIdHex(item[0]),
 			FirstName: item[1],
 			LastName:  item[2],
 			Email:     item[3],
 			Phone:     item[4],
-		})
+		}
+		if errs := checkCorrectValues(&user); errs != nil {
+			continue
+		}
+		users = append(users, user)
 	}
 	return users, nil
 }
