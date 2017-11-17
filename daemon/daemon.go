@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"regexp"
 	"strings"
 
 	"gopkg.in/mgo.v2/bson"
@@ -25,6 +26,17 @@ const MAXFILESIZE = 1024 * 1024 * 8
 
 var controller controllers.User
 var logger *log.Logger
+
+//errorMessage struct used to return error messages back to client
+type errorMessage struct {
+	Err string `json:"error,omitempty"`
+}
+
+//Precompiled checks for email and names
+var (
+	emailCheck = regexp.MustCompile("^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*$").MatchString
+	nameCheck  = regexp.MustCompile("^[a-zA-Z]+$").MatchString
+)
 
 //Start runs service. It accepts pointer to mgo.Collection for creating controller,
 //INPUT:
@@ -81,6 +93,13 @@ func createUserHandler(w http.ResponseWriter, r *http.Request) {
 		logger.Printf("Can't parse request body. Reason: %v", err)
 		return
 	}
+	if errs := checkCorrectValues(&user); errs != nil {
+		w.Header().Add("Content-type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(errs)
+		logger.Printf("Can't parse structure: %v", user)
+		return
+	}
 	id, err := controller.CreateUser(&user)
 	if err != nil {
 		w.Header().Add("Content-type", "application/json")
@@ -134,6 +153,13 @@ func updateUserHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-type", "application/json")
 		http.Error(w, jsonError(err), http.StatusBadRequest)
 		logger.Printf("Can't parse request body. Reason: %v", err)
+		return
+	}
+	if errs := checkCorrectValues(&user); errs != nil {
+		w.Header().Add("Content-type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(errs)
+		logger.Printf("Can't parse structure: %v", user)
 		return
 	}
 	id := bson.ObjectIdHex(varsID)
@@ -284,4 +310,21 @@ func populateUsers(input [][]string) ([]models.User, error) {
 		})
 	}
 	return users, nil
+}
+
+func checkCorrectValues(u *models.User) *[]errorMessage {
+	var errs []errorMessage
+	if !emailCheck(u.Email) {
+		errs = append(errs, errorMessage{Err: "Can't parse email"})
+	}
+	if !nameCheck(u.FirstName) {
+		errs = append(errs, errorMessage{Err: "First Name is incorrect"})
+	}
+	if !nameCheck(u.LastName) {
+		errs = append(errs, errorMessage{Err: "Last Name is incorrect"})
+	}
+	if len(errs) == 0 {
+		return nil
+	}
+	return &errs
 }
