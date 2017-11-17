@@ -3,7 +3,7 @@ This is project for coding challenge.
 The aim of the project is to show my skills in designing and implementing simple Go microservice server which should expose REST API.
 
 ## Installation
-Before compile it's neccessary to import additional packages.
+Before compile it's necessary to import additional packages.
 
 ### Downloading and compiling source code
 ```bash
@@ -13,9 +13,9 @@ cd addressbook
 go get .
 go build -o addressBook .
 ```
-To successfuly run this server MongoDB should be installed.
+To successfully run this server MongoDB should be installed.
 
-### MongoDB requirmenets
+### MongoDB requirements
 MongoDB may or may not have Authentication and Authorization. 
 
 ### Go server run parameters
@@ -94,7 +94,7 @@ Server supports the following parameters:
 </table>
 
 ### Server run
-The simplest way to run server is to install MongoDB on locahost and make it listen to default port.  
+The simplest way to run server is to install MongoDB on localhost and make it listen to default port.  
 After this run the following command:
 ```bash
 ./addressBook -dbname "Database Name" -dbcoll "Collection Name"
@@ -186,7 +186,7 @@ The following table describes available API requests that the server can process
 </table>
 
 ### Import file requirements
-When uploading csv file to the server it is neccessary to specify  
+When uploading csv file to the server it is necessary to specify  
 ```Content-type: "text/csv".```  
   
 Also there is optional header for data manipulation:  
