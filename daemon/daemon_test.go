@@ -28,11 +28,21 @@ func TestAll(t *testing.T) {
 	if !t.Run("Test create user", testCreateUser) {
 		t.FailNow()
 	}
-	t.Run("Test list users", testListUsers)
-	t.Run("Test select user", testSelectUser)
-	t.Run("Test update user", testUpdateUser)
-	t.Run("Test remove user", testRemoveUser)
-	t.Run("Test list users", testListUsers)
+	if !t.Run("Test list users", testListUsers) {
+		t.FailNow()
+	}
+	if !t.Run("Test select user", testSelectUser) {
+		t.FailNow()
+	}
+	if !t.Run("Test update user", testUpdateUser) {
+		t.FailNow()
+	}
+	if !t.Run("Test remove user", testRemoveUser) {
+		t.FailNow()
+	}
+	if !t.Run("Test list users", testListUsers) {
+		t.FailNow()
+	}
 }
 
 func findUser(id bson.ObjectId) models.User {
@@ -84,7 +94,7 @@ func testCreateUser(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Can't marshal data. Reason: %v", err)
 		}
-		req, _ := http.NewRequest(http.MethodPut, "http://127.0.0.1:8080/api/v1/addressbook/user", bytes.NewReader(data))
+		req, _ := http.NewRequest(http.MethodPost, "http://127.0.0.1:8080/api/v1/addressbook/user", bytes.NewReader(data))
 
 		resp, err := client.Do(req)
 		if err != nil {
@@ -112,7 +122,9 @@ func testListUsers(t *testing.T) {
 		t.Logf("Unexpected error: %v", err)
 		t.FailNow()
 	}
-
+	if resp.StatusCode != http.StatusOK {
+		t.Logf("Expected code 200, got: %d", resp.StatusCode)
+	}
 	var userlist []models.User
 	if err := json.NewDecoder(resp.Body).Decode(&userlist); err != nil {
 		t.Logf("Unexpected error: %v", err)
@@ -150,13 +162,13 @@ func testUpdateUser(t *testing.T) {
 	userslist[0].Phone = "updPhone"
 	user := userslist[0]
 	data, _ := json.Marshal(&user)
-	req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("http://127.0.0.1:8080/api/v1/addressbook/user/%s", user.ID.Hex()), bytes.NewReader(data))
+	req, _ := http.NewRequest(http.MethodPut, fmt.Sprintf("http://127.0.0.1:8080/api/v1/addressbook/user/%s", user.ID.Hex()), bytes.NewReader(data))
 	resp, err := client.Do(req)
 	if err != nil {
 		t.Logf("Can't proceed a request. Reason: %v", err)
 		t.FailNow()
 	}
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != http.StatusNoContent {
 		t.FailNow()
 	}
 }
@@ -172,7 +184,7 @@ func testRemoveUser(t *testing.T) {
 	if err != nil {
 		t.FailNow()
 	}
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != http.StatusNoContent {
 		t.FailNow()
 	}
 	removeUser(user.ID)

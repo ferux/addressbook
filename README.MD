@@ -136,7 +136,7 @@ The following table describes available API requests that the server can process
     </tr>
     <tr>
         <td>/api/v1/addressbook/user</td>
-        <td>PUT</td>
+        <td>POST</td>
         <td>{User}</td>
         <td>Creates a new user. ID field will be ignored.</td>
         <td>{id: LastInsertedID}</td>
@@ -152,7 +152,7 @@ The following table describes available API requests that the server can process
     </tr>
     <tr>
         <td>/api/v1/addressbook/user/{id}</td>
-        <td>POST</td>
+        <td>PUT</td>
         <td>{UserNew}</td>
         <td>Updates selected user. All fields should be specified except ID</td>
         <td>{UserNew}</td>

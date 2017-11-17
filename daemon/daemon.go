@@ -47,9 +47,9 @@ func Start(db *mgo.Collection, addr string, w io.Writer) error {
 	router := mux.NewRouter()
 	routerV1 := router.PathPrefix("/api/v1/addressbook").Subrouter()
 	routerV1.HandleFunc("/", listUsersHandler).Methods("GET")
-	routerV1.HandleFunc("/user", createUserHandler).Methods("PUT")
+	routerV1.HandleFunc("/user", createUserHandler).Methods("POST")
 	routerV1.HandleFunc("/user/{id}", selectUserHandler).Methods("GET")
-	routerV1.HandleFunc("/user/{id}", updateUserHandler).Methods("POST")
+	routerV1.HandleFunc("/user/{id}", updateUserHandler).Methods("PUT")
 	routerV1.HandleFunc("/user/{id}", deleteUserHandler).Methods("DELETE")
 	routerV1.HandleFunc("/export", downloadCSVHandler).Methods("GET")
 	routerV1.HandleFunc("/import", uploadCSVHandler).Methods("PUT")
@@ -117,6 +117,7 @@ func selectUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(user)
 }
 func updateUserHandler(w http.ResponseWriter, r *http.Request) {
@@ -148,8 +149,8 @@ func updateUserHandler(w http.ResponseWriter, r *http.Request) {
 		logger.Printf("Can't update data. Reason: %v", len(id))
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprint(w, "OK")
+	w.WriteHeader(http.StatusNoContent)
+
 }
 func deleteUserHandler(w http.ResponseWriter, r *http.Request) {
 	logger.Printf("Request %s from %s", r.RequestURI, r.RemoteAddr)
@@ -173,8 +174,7 @@ func deleteUserHandler(w http.ResponseWriter, r *http.Request) {
 		logger.Printf("Can't delete data. Reason: %v", len(id))
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprint(w, "OK")
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func uploadCSVHandler(w http.ResponseWriter, r *http.Request) {
@@ -259,7 +259,6 @@ func clearHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	fmt.Fprint(w, `{"status": "ok"}`)
 }
 
 func jsonError(err error) string {
