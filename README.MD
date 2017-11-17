@@ -8,7 +8,7 @@ Before compile it's neccessary to import additional packages.
 ### Downloading and compiling source code
 ```bash
 mkdir addressbook
-git clone https://ferux.github.com/addressbook
+git clone https://github.com/ferux/addressbook
 cd addressbook
 go get .
 go build -o addressBook .
@@ -178,10 +178,7 @@ The following table describes available API requests that the server can process
         <td>/api/v1/addressbook/import</td>
         <td>PUT</td>
         <td>CSV file</td>
-        <td>Imports records into Addressbook. This method's headers should be specified. Look here
-        Content-type: text/csv (required)
-        Append-type: clear | append | upsert (optional)  
-        See here
+        <td>Imports records into Addressbook. This method's headers should be specified. See below for more info.
         </td>
         <td>It returns STATUS 200 OK</td>
         <td>{error: "Message}</td>
