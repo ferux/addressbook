@@ -74,8 +74,8 @@ func listUsersHandler(w http.ResponseWriter, r *http.Request) {
 	logger.Printf("Request %s from %s", r.RequestURI, r.RemoteAddr)
 	users, err := controller.ListUsers()
 	if err != nil {
-		w.Header().Add("Content-type", "application/json")
 		http.Error(w, jsonError(err), http.StatusInternalServerError)
+		w.Header().Add("Content-type", "application/json")
 		logger.Printf("Got an error trying to retrieve userlist. Reason: %v", err)
 		return
 	}
@@ -88,8 +88,8 @@ func createUserHandler(w http.ResponseWriter, r *http.Request) {
 	logger.Printf("Request %s from %s", r.RequestURI, r.RemoteAddr)
 	var user models.User
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		w.Header().Add("Content-type", "application/json")
 		http.Error(w, jsonError(err), http.StatusBadRequest)
+		w.Header().Add("Content-type", "application/json")
 		logger.Printf("Can't parse request body. Reason: %v", err)
 		return
 	}
@@ -102,8 +102,8 @@ func createUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	id, err := controller.CreateUser(&user)
 	if err != nil {
-		w.Header().Add("Content-type", "application/json")
 		http.Error(w, jsonError(err), http.StatusInternalServerError)
+		w.Header().Add("Content-type", "application/json")
 		logger.Printf("Can't create user. Reason: %v", err)
 		return
 	}
@@ -117,8 +117,8 @@ func selectUserHandler(w http.ResponseWriter, r *http.Request) {
 	logger.Printf("Request %s from %s", r.RequestURI, r.RemoteAddr)
 	varsID := mux.Vars(r)["id"]
 	if !bson.IsObjectIdHex(varsID) {
-		w.Header().Add("Content-type", "application/json")
 		http.Error(w, jsonError(fmt.Errorf("Object %s is not ObjectID", varsID)), http.StatusBadRequest)
+		w.Header().Add("Content-type", "application/json")
 		logger.Printf("Object %s is not objectID", varsID)
 		return
 	}
@@ -150,8 +150,8 @@ func updateUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	user := models.User{}
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		w.Header().Add("Content-type", "application/json")
 		http.Error(w, jsonError(err), http.StatusBadRequest)
+		w.Header().Add("Content-type", "application/json")
 		logger.Printf("Can't parse request body. Reason: %v", err)
 		return
 	}
@@ -212,15 +212,15 @@ func uploadCSVHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	records, err := csv.NewReader(io.LimitReader(r.Body, MAXFILESIZE)).ReadAll()
 	if err != nil {
-		w.Header().Add("Content-type", "application/json")
 		http.Error(w, jsonError(err), http.StatusInternalServerError)
+		w.Header().Add("Content-type", "application/json")
 		logger.Printf("Can't read file. Reason: %v", err)
 		return
 	}
 	users, err := populateUsers(records)
 	if err != nil {
-		w.Header().Add("Content-type", "application/json")
 		http.Error(w, jsonError(err), http.StatusInternalServerError)
+		w.Header().Add("Content-type", "application/json")
 		logger.Printf("Can't read file.\nReason: %v", err)
 		return
 	}
@@ -229,25 +229,32 @@ func uploadCSVHandler(w http.ResponseWriter, r *http.Request) {
 	case "clear":
 		if err := controller.CleanRecords(); err != nil {
 			logger.Printf("Can't clean records. Reason: %v", err)
+			http.Error(w, jsonError(err), http.StatusInternalServerError)
+			w.Header().Add("Content-type", "application/json")
 			return
 		}
 		fallthrough
 	case "append":
 		for _, item := range users {
 			if err := controller.UploadUser(&item); err != nil {
+				http.Error(w, jsonError(err), http.StatusInternalServerError)
+				w.Header().Add("Content-type", "application/json")
 				logger.Printf("Can't upload user. Reason: %v", err)
+				return
 			}
 		}
 		break
 	default:
 		for _, item := range users {
 			if err := controller.UpsertUser(&item); err != nil {
+				http.Error(w, jsonError(err), http.StatusInternalServerError)
+				w.Header().Add("Content-type", "application/json")
 				logger.Printf("Can't upsert user. Reason: %v", err)
+				return
 			}
 		}
 		break
 	}
-
 	http.Redirect(w, r, "/api/v1/addressbook/", http.StatusFound)
 }
 
@@ -256,11 +263,15 @@ func downloadCSVHandler(w http.ResponseWriter, r *http.Request) {
 	users, err := controller.ListUsers()
 	if err != nil {
 		http.Error(w, jsonError(err), http.StatusInternalServerError)
+		w.Header().Add("Content-type", "application/json")
 		logger.Printf("Got an error trying to retrieve userlist: %v", err)
+		return
 	}
 	if len(*users) == 0 {
 		http.Error(w, jsonError(errors.New("There is nothing to show")), http.StatusNoContent)
+		w.Header().Add("Content-type", "application/json")
 		logger.Printf("There is nothing to show")
+		return
 	}
 
 	records := [][]string{}
@@ -281,6 +292,7 @@ func clearHandler(w http.ResponseWriter, r *http.Request) {
 	logger.Printf("Request %s from %s", r.RequestURI, r.RemoteAddr)
 	if err := controller.CleanRecords(); err != nil {
 		http.Error(w, jsonError(err), http.StatusInternalServerError)
+		w.Header().Add("Content-type", "application/json")
 		logger.Printf("Can't clean records. Reason: %v", err)
 		return
 	}
