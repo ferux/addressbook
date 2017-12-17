@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/ferux/AddressBook/controllers"
@@ -69,27 +70,25 @@ func getParamsDocker() {
 	if listen == "" {
 		listen = ":8080"
 	}
-	if os.Getenv("DEBUG") == "true" {
+	if strings.ToLower(os.Getenv("DEBUG")) == "true" {
 		debugmode = true
 	}
 }
 
 func main() {
+	w := ioutil.Discard
+	if debugmode {
+		w = os.Stderr
+	}
+	logger = log.New(w, "[Addressbook] ", log.Ldate+log.Ltime)
 	if os.Getenv("DOCKER") != "" {
 		getParamsDocker()
 	} else {
 		getParams()
 	}
 
-	w := ioutil.Discard
-	if debugmode {
-		w = os.Stderr
-	}
-
-	logger = log.New(w, "[Addressbook] ", log.Ldate+log.Ltime)
 	logger.Printf("Started Addressbook. Version: %s", VERSION)
 
-	// dbConfig, err := db.New(host, username, password, database, collection, time.Second*time.Duration(timeout), retry)
 	dbConfig, err := db.New(host, username, password, database, collection, time.Second*time.Duration(timeout), retry)
 	if err != nil {
 		log.Fatalf("Failed to parse parameters. Reason: %v", err)
