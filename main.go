@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/ferux/AddressBook/controllers"
@@ -38,8 +39,47 @@ func getParams() {
 	flag.Parse()
 }
 
+func getParamsDocker() {
+	var err error
+	username = os.Getenv("DBUSER")
+	password = os.Getenv("DBPASS")
+	host = os.Getenv("DBADDR")
+	if host == "" {
+		host = "127.0.0.1:27017"
+	}
+	database = os.Getenv("DBNAME")
+	if database == "" {
+		database = "addressbook"
+	}
+	collection = os.Getenv("COLLECTION")
+	if collection == "" {
+		collection = "users"
+	}
+	timeout, err = strconv.Atoi(os.Getenv("TIMEOUT"))
+	if err != nil {
+		logger.Printf("Cant parse string: '%s'\n", os.Getenv("TIMEOUT"))
+		timeout = 3
+	}
+	retry, err = strconv.Atoi(os.Getenv("RETRY"))
+	if err != nil {
+		logger.Printf("Cant parse string '%s'\n", os.Getenv("RETRY"))
+		retry = 3
+	}
+	listen = os.Getenv("LISTEN")
+	if listen == "" {
+		listen = ":8080"
+	}
+	if os.Getenv("DEBUG") == "true" {
+		debugmode = true
+	}
+}
+
 func main() {
-	getParams()
+	if os.Getenv("DOCKER") != "" {
+		getParamsDocker()
+	} else {
+		getParams()
+	}
 
 	w := ioutil.Discard
 	if debugmode {
