@@ -28,7 +28,7 @@ func TestNew(t *testing.T) {
 		want    *Config
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		// TODO: Add test cases. id:5 gh:6 ic:gh
 		{
 			name: "Test empty host",
 			args: args{
@@ -167,7 +167,7 @@ func Test_checkConnection(t *testing.T) {
 		args  args
 		wantW string
 	}{
-	// TODO: Add test cases.
+	// TODO: Add test cases. id:1 gh:2 ic:gh
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

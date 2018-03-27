@@ -19,7 +19,7 @@ func TestUser_CreateUser(t *testing.T) {
 		want    bson.ObjectId
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		// TODO: Add test cases. id:4 gh:5 ic:gh
 		{
 			name: "Nil pointer test",
 			c: &User{
@@ -56,7 +56,7 @@ func TestUser_UpdateUser(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+	// TODO: Add test cases. id:0 gh:1 ic:gh
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -77,7 +77,7 @@ func TestUser_DeleteUser(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+	// TODO: Add test cases. id:2 gh:3 ic:gh
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -99,7 +99,7 @@ func TestUser_SelectUser(t *testing.T) {
 		want    *models.User
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+	// TODO: Add test cases. id:3 gh:4 ic:gh
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -122,7 +122,7 @@ func TestUser_ListUsers(t *testing.T) {
 		want    *[]models.User
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+	// TODO: Add test cases. id:6 gh:7 ic:gh
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
