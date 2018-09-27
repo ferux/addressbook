@@ -1,3 +1,5 @@
+[![TODO board](https://imdone.io/api/1.0/projects/5ab993210647bc75fd8324d1/badge)](https://imdone.io/app#/board/ferux/addressbook)
+
 # AddressBook
 This is project for coding challenge.
 The aim of the project is to show my skills in designing and implementing simple Go microservice server which should expose REST API.
