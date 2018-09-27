@@ -1,15 +1,18 @@
-GO = go
-REV = $(shell git rev-parse --short HEAD)
-ENV = $(shell git --abbrev-ref HEAD)
-VER = $(shell git describe --abbrev=0 --tags)
-GOOS ?= linux
-GOARCH ?= amd64
-PKG = $(shell go list ./... | head -1)
-PKGNAME = $(shell $(GO) list ./... | head -1 | sed -e 's/.*\///')
+GO=go
+REV=$(shell git rev-parse --short HEAD)
+ENV=$(shell git rev-parse --abbrev-ref HEAD)
+VER=$(shell git describe --abbrev=0 --tags)
+GOOS?=linux
+GOARCH?=amd64
+PKG=$(shell go list ./... | head -1)
+PKGNAME=$(shell $(GO) list ./... | head -1 | sed -e 's/.*\///')
 
 info:
-	ECHO Rev: $(REV) Env: $(ENV) Ver: $(VER)
-	ECHO $(GOOS) $(GOARCH) $(PKG) $(PKGNAME)
+	@printf "Rev  $(REV)\nEnv  $(ENV)\nVer  $(VER)\nOS   $(GOOS)\nARCH $(GOARCH)\nPKG  $(PKG)\nNAME $(PKGNAME)\n"
 
-build:
-	ECHO not implemented yet
+build: 
+	$(GO) build -ldflags="-X $(PKG).Version=$(VER) -X $(PKG).Revision=$(REV) -X $(PKG).Env=$(ENV)" \
+		-o ./bin/$(GOOS)-$(GOARCH)-$(PKGNAME) ./cmd/
+
+run: build
+	./bin/$(GOOS)-$(GOARCH)-$(PKGNAME)

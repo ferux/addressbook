@@ -3,14 +3,9 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:d0542f82ac85ea25225a1ad2fa277a1decfe7d323f877a6449939ff84b554b0f"
+  digest = "1:a32c69c6fae7c2889fd255cff85378fcdea62992a05b89bc2e768a828fefded0"
   name = "github.com/ferux/AddressBook"
-  packages = [
-    "controllers",
-    "daemon",
-    "db",
-    "models",
-  ]
+  packages = ["models"]
   pruneopts = "UT"
   revision = "afe2389736c48abfb0837119d83eb55464b28074"
 
@@ -48,9 +43,6 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
-    "github.com/ferux/AddressBook/controllers",
-    "github.com/ferux/AddressBook/daemon",
-    "github.com/ferux/AddressBook/db",
     "github.com/ferux/AddressBook/models",
     "github.com/gorilla/mux",
     "gopkg.in/mgo.v2",

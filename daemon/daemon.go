@@ -14,9 +14,9 @@ import (
 
 	"gopkg.in/mgo.v2/bson"
 
-	"github.com/ferux/AddressBook/models"
+	"github.com/ferux/addressbook/models"
 
-	"github.com/ferux/AddressBook/controllers"
+	"github.com/ferux/addressbook/controllers"
 	"github.com/gorilla/mux"
 	"gopkg.in/mgo.v2"
 )
