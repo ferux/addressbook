@@ -12,7 +12,7 @@ info:
 
 build: 
 	$(GO) build -ldflags="-X $(PKG).Version=$(VER) -X $(PKG).Revision=$(REV) -X $(PKG).Env=$(ENV)" \
-		-o ./bin/$(GOOS)-$(GOARCH)-$(PKGNAME) ./cmd/
+		-o ./bin/$(GOOS)-$(GOARCH)-$(PKGNAME) ./internal/cmd/
 
 run: build
 	./bin/$(GOOS)-$(GOARCH)-$(PKGNAME)

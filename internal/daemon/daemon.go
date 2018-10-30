@@ -1,6 +1,7 @@
 package daemon
 
 import (
+	"context"
 	"encoding/csv"
 	"encoding/json"
 	"errors"
@@ -8,17 +9,19 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
+	"time"
 
+	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 
-	"github.com/ferux/addressbook/models"
-
-	"github.com/ferux/addressbook/controllers"
+	"github.com/ferux/addressbook/internal/controllers"
+	"github.com/ferux/addressbook/internal/models"
 	"github.com/gorilla/mux"
-	"gopkg.in/mgo.v2"
 )
 
 //MAXFILESIZE limits the maximum size of CSV file (used in import)
@@ -43,10 +46,10 @@ var (
 // db (*mgo.Collection) -- points to the collection in database
 // addr (string) 		-- defines listen address for income connections
 // w (io.Writer)		-- Writer for logging.
-func Start(db *mgo.Collection, addr string, w io.Writer) error {
+func Start(db *mgo.Database, addr string, w io.Writer) error {
 	logger = log.New(w, "[Daemon] ", log.Lshortfile+log.Ldate+log.Ltime)
 	if db == nil {
-		return errors.New("Collection variable is nil")
+		return errors.New("DB variable is nil")
 	}
 	if addr == "" {
 		return errors.New("Address is empty")
@@ -54,9 +57,20 @@ func Start(db *mgo.Collection, addr string, w io.Writer) error {
 	if w == nil {
 		w = ioutil.Discard
 	}
-	controller = controllers.User{Collection: db}
+	controller = controllers.User{Collection: db.C("users")}
 
+	router := addRoutes()
+
+	logger.Printf("Ready to accept connections on %s", addr)
+	return http.ListenAndServe(addr, router)
+}
+
+func addRoutes() *mux.Router {
 	router := mux.NewRouter()
+	router.Use(sessionMiddleware)
+	router.Use(logMiddleware)
+
+	router.HandleFunc("/", helloHandler).Methods("GET")
 	routerV1 := router.PathPrefix("/api/v1/addressbook").Subrouter()
 	routerV1.HandleFunc("/", listUsersHandler).Methods("GET")
 	routerV1.HandleFunc("/user", createUserHandler).Methods("POST")
@@ -66,12 +80,62 @@ func Start(db *mgo.Collection, addr string, w io.Writer) error {
 	routerV1.HandleFunc("/export", downloadCSVHandler).Methods("GET")
 	routerV1.HandleFunc("/import", uploadCSVHandler).Methods("PUT")
 	routerV1.HandleFunc("/clear", clearHandler).Methods("GET")
-	logger.Printf("Ready to accept connections on %s", addr)
-	return http.ListenAndServe(addr, router)
+	return router
+}
+
+type daemonKeys uint8
+
+const (
+	keySID daemonKeys = iota
+)
+
+type middlewareFunc func(w http.ResponseWriter, r *http.Request)
+
+func (f middlewareFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	f(w, r)
+}
+
+func sessionMiddleware(f http.Handler) http.Handler {
+	m := func(w http.ResponseWriter, r *http.Request) {
+		sidcookie, err := r.Cookie("sessionid")
+		if err != nil {
+			sidcookie = &http.Cookie{}
+			logger.Printf("err getting cookie: %v", err)
+			sid := rand.Uint64()
+			logger.Printf("new sid: %d", sid)
+			sidcookie.Value = strconv.FormatUint(sid, 10)
+			sidcookie.Expires = time.Now().Add(time.Hour * 24 * 7)
+			sidcookie.HttpOnly = true
+			sidcookie.Name = "sessionid"
+			sidcookie.Path = "/"
+			http.SetCookie(w, sidcookie)
+			ctx := context.WithValue(r.Context(), keySID, sid)
+			r.WithContext(ctx)
+		} else {
+			sidcookie.Expires = time.Now().Add(time.Hour * 24 * 7)
+		}
+		f.ServeHTTP(w, r)
+	}
+	return middlewareFunc(m)
+}
+
+func logMiddleware(f http.Handler) http.Handler {
+	m := func(w http.ResponseWriter, r *http.Request) {
+		logger.Printf("Request %s from %s", r.RequestURI, r.RemoteAddr)
+		f.ServeHTTP(w, r)
+	}
+	return middlewareFunc(m)
+}
+
+func helloHandler(w http.ResponseWriter, r *http.Request) {
+	_ = r
+	w.Header().Add("Content-type", "text/html")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("ok"))
 }
 
 func listUsersHandler(w http.ResponseWriter, r *http.Request) {
-	logger.Printf("Request %s from %s", r.RequestURI, r.RemoteAddr)
+	_ = r
 	users, err := controller.ListUsers()
 	if err != nil {
 		http.Error(w, jsonError(err), http.StatusInternalServerError)
@@ -85,7 +149,6 @@ func listUsersHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func createUserHandler(w http.ResponseWriter, r *http.Request) {
-	logger.Printf("Request %s from %s", r.RequestURI, r.RemoteAddr)
 	var user models.User
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		http.Error(w, jsonError(err), http.StatusBadRequest)
@@ -114,7 +177,6 @@ func createUserHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func selectUserHandler(w http.ResponseWriter, r *http.Request) {
-	logger.Printf("Request %s from %s", r.RequestURI, r.RemoteAddr)
 	varsID := mux.Vars(r)["id"]
 	if !bson.IsObjectIdHex(varsID) {
 		http.Error(w, jsonError(fmt.Errorf("Object %s is not ObjectID", varsID)), http.StatusBadRequest)
@@ -140,7 +202,6 @@ func selectUserHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(user)
 }
 func updateUserHandler(w http.ResponseWriter, r *http.Request) {
-	logger.Printf("Request %s from %s", r.RequestURI, r.RemoteAddr)
 	varsID := mux.Vars(r)["id"]
 	if !bson.IsObjectIdHex(varsID) {
 		w.Header().Add("Content-type", "application/json")
@@ -179,7 +240,6 @@ func updateUserHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 func deleteUserHandler(w http.ResponseWriter, r *http.Request) {
-	logger.Printf("Request %s from %s", r.RequestURI, r.RemoteAddr)
 	varsID := mux.Vars(r)["id"]
 	if !bson.IsObjectIdHex(varsID) {
 		w.Header().Add("Content-type", "application/json")
@@ -204,7 +264,6 @@ func deleteUserHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func uploadCSVHandler(w http.ResponseWriter, r *http.Request) {
-	logger.Printf("Request %s from %s", r.RequestURI, r.RemoteAddr)
 	if strings.ToLower(r.Header.Get("Content-type")) != "text/csv" {
 		http.Error(w, jsonError(errors.New("Content type should be text/csv")), http.StatusBadRequest)
 		logger.Printf("Content type should be text/csv")
@@ -259,7 +318,7 @@ func uploadCSVHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func downloadCSVHandler(w http.ResponseWriter, r *http.Request) {
-	logger.Printf("Request %s from %s", r.RequestURI, r.RemoteAddr)
+	_ = r
 	users, err := controller.ListUsers()
 	if err != nil {
 		http.Error(w, jsonError(err), http.StatusInternalServerError)
@@ -289,7 +348,6 @@ func downloadCSVHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func clearHandler(w http.ResponseWriter, r *http.Request) {
-	logger.Printf("Request %s from %s", r.RequestURI, r.RemoteAddr)
 	if err := controller.CleanRecords(); err != nil {
 		http.Error(w, jsonError(err), http.StatusInternalServerError)
 		w.Header().Add("Content-type", "application/json")

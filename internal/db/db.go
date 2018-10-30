@@ -2,10 +2,11 @@ package db
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"log"
 	"time"
+
+	"github.com/ferux/addressbook/internal/types"
 
 	"gopkg.in/mgo.v2"
 )
@@ -19,33 +20,29 @@ type Config struct {
 	Timeout    time.Duration
 }
 
+// Repo contains active connection to mgo.
+type Repo struct {
+	DB *mgo.Database
+}
+
 var logger *log.Logger
 
+// NewV2 updated version of constructor.
+func NewV2(dbconf types.DB) (*Repo, error) {
+	repo, err := mgo.Dial(dbconf.Connection)
+	if err != nil {
+		return &Repo{}, err
+	}
+	var r Repo
+	r.DB = repo.DB(dbconf.Name)
+	return &r, nil
+}
+
 //New makes a new config file for start database connection
-func New(host, user, password, database, collection string, timeout time.Duration, tryAmount int) (*Config, error) {
-	if len(database) == 0 || len(host) == 0 || len(collection) == 0 {
-		return nil, errors.New("Parameters shouldn't be empty")
-	}
-	if timeout < 0 || tryAmount < 0 {
-		return nil, errors.New("timeout or amount of tries should be greater or equal zero")
-	}
-	if timeout == 0 {
-		timeout = time.Second * 5
-	}
-	if tryAmount == 0 {
-		tryAmount = 1
-	}
-	creds := ""
-	if len(user) > 0 {
-		creds = fmt.Sprintf("%s:%s@", user, password)
-	}
-	config := Config{}
-	config.ConnString = fmt.Sprintf("mongodb://%s%s/%s", creds, host, database)
-	config.Database = database
-	config.Collection = collection
-	config.Timeout = timeout
-	config.TryAmount = tryAmount
-	return &config, nil
+// will be removed soon
+func New(_, _, _, _, _ string, _ time.Duration, _ int) (*Config, error) {
+
+	return &Config{}, nil
 }
 
 //CreateConnection creates connection to database and returns connection and error.

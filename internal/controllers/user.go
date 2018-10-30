@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"github.com/ferux/addressbook/models"
+	"github.com/ferux/addressbook/internal/models"
 
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
