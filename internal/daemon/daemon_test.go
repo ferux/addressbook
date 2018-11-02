@@ -45,7 +45,7 @@ func TestAll(t *testing.T) {
 	}
 }
 
-func findUser(id bson.ObjectId) models.User {
+func findUserTest(id bson.ObjectId) models.User {
 	for _, item := range userslist {
 		if item.ID == id {
 			return item

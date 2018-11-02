@@ -1,6 +1,7 @@
 package daemon
 
 import (
+	"context"
 	"encoding/csv"
 	"errors"
 	"fmt"
@@ -63,7 +64,32 @@ type daemonKeys uint8
 
 const (
 	keySID daemonKeys = iota
+	keyReqID
 )
+
+// WithSID adds sid to ctx
+func WithSID(ctx context.Context, sid string) context.Context {
+	ctxn := context.WithValue(ctx, keySID, sid)
+	return ctxn
+}
+
+// GetSID retrieves SID from ctx
+func GetSID(ctx context.Context) string {
+	sid, _ := ctx.Value(keySID).(string)
+	return sid
+}
+
+// WithRID adds sid to ctx
+func WithRID(ctx context.Context, rid string) context.Context {
+	ctxn := context.WithValue(ctx, keyReqID, rid)
+	return ctxn
+}
+
+// GetRID retrieves SID from ctx
+func GetRID(ctx context.Context) string {
+	rid, _ := ctx.Value(keyReqID).(string)
+	return rid
+}
 
 type middlewareFunc func(w http.ResponseWriter, r *http.Request)
 
