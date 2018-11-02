@@ -1,0 +1,18 @@
+{
+        "database": {
+                "connection": "mongodb://guest:guest@localhost:37185",
+                "name": "addressbook",
+                "collection": "users"
+        },
+        "database_test":{
+                "connection": "mongodb://guest:guest@localhost:37185",
+                "name": "addressbook_test",
+                "collection": "users"
+        },
+        "api": {
+                "listen": ":8080",
+                "timeout": 30
+        },
+        "debug": true,
+        "custom_test_db": true
+}

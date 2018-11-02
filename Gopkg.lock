@@ -3,50 +3,37 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:a32c69c6fae7c2889fd255cff85378fcdea62992a05b89bc2e768a828fefded0"
   name = "github.com/ferux/AddressBook"
   packages = ["models"]
-  pruneopts = "UT"
   revision = "afe2389736c48abfb0837119d83eb55464b28074"
 
 [[projects]]
-  digest = "1:c79fb010be38a59d657c48c6ba1d003a8aa651fa56b579d959d74573b7dff8e1"
   name = "github.com/gorilla/context"
   packages = ["."]
-  pruneopts = "UT"
   revision = "08b5f424b9271eedf6f9f0ce86cb9396ed337a42"
   version = "v1.1.1"
 
 [[projects]]
-  digest = "1:e73f5b0152105f18bc131fba127d9949305c8693f8a762588a82a48f61756f5f"
   name = "github.com/gorilla/mux"
   packages = ["."]
-  pruneopts = "UT"
   revision = "e3702bed27f0d39777b0b37b664b6280e8ef8fbf"
   version = "v1.6.2"
 
 [[projects]]
   branch = "v2"
-  digest = "1:988de7520a09024d5d94cd99bd545afbf194893994ec759b1cda0a0bbb6adb80"
   name = "gopkg.in/mgo.v2"
   packages = [
     ".",
     "bson",
     "internal/json",
     "internal/sasl",
-    "internal/scram",
+    "internal/scram"
   ]
-  pruneopts = "UT"
   revision = "9856a29383ce1c59f308dd1cf0363a79b5bef6b5"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  input-imports = [
-    "github.com/ferux/AddressBook/models",
-    "github.com/gorilla/mux",
-    "gopkg.in/mgo.v2",
-    "gopkg.in/mgo.v2/bson",
-  ]
+  inputs-digest = "9206ebcb8712bfe593d60f6b6549c5f7d3f63d4231ddb28ded34bb68ca6d505e"
   solver-name = "gps-cdcl"
   solver-version = 1

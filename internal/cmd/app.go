@@ -1,8 +1,6 @@
 package main
 
 import (
-	"os"
-
 	"github.com/ferux/addressbook/internal/daemon"
 	"github.com/ferux/addressbook/internal/db"
 	"github.com/ferux/addressbook/internal/types"
@@ -13,6 +11,6 @@ func run(c *types.Config) error {
 	if err != nil {
 		return err
 	}
-
-	return daemon.Start(repo.DB, c.API.Listen, os.Stdout)
+	api := daemon.NewAPI(repo.DB, c.API)
+	return api.Run()
 }
