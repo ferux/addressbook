@@ -1,4 +1,4 @@
-package daemon
+package api
 
 import (
 	"bytes"
@@ -18,6 +18,7 @@ const testConnectionString = "mongodb://192.168.99.100:27017"
 
 var userslist []models.User
 
+// TODO: adapt to API.
 //To run this tests the API server should be on.
 func TestAll(t *testing.T) {
 	userslist = make([]models.User, 0)
