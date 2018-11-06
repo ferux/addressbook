@@ -15,6 +15,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
+
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -26,6 +27,7 @@ var (
 
 // API serves requests from clients.
 // TODO: handle database reconnect
+// TODO: copy session before getting data from db
 type API struct {
 	db     *mgo.Database
 	logger *logrus.Entry
@@ -41,39 +43,15 @@ func NewAPI(dbconn *mgo.Database, apiconf types.API) *API {
 	}
 }
 
-func (a *API) registerRoutes() *mux.Router {
-	r := mux.NewRouter()
-
-	r.Use(a.sessionmw, a.logmw)
-
-	r.NotFoundHandler = a.sessionmw(a.logmw(a.notFoundHandler()))
-	rv1 := r.PathPrefix("/api/v1/book").Subrouter()
-	rv1.HandleFunc("", a.helloHandler).Methods("GET")
-	rv1.HandleFunc("/", a.helloHandler).Methods("GET")
-	rv1.HandleFunc("/user", a.listUsersHandler).Methods("GET")
-	rv1.HandleFunc("/user/{id}", a.selectUserHandler).Methods("GET")
-	rv1.HandleFunc("/user/{id}", a.updateUserHandler).Methods("PUT")
-	rv1.HandleFunc("/user/{id}", a.deleteUserHandler).Methods("DELETE")
-	rv1.HandleFunc("/export", a.downloadCSVHandler).Methods("GET")
-	return r
-}
-
 func (a *API) sessionmw(f http.Handler) http.Handler {
 	m := func(w http.ResponseWriter, r *http.Request) {
 		sidcookie, err := r.Cookie("sessionid")
 		if err != nil {
-			sidcookie = &http.Cookie{}
-			a.logger.Debugf("err getting cookie: %v", err)
-			sid := uuid.New().String()
-			sidcookie.Value = sid
-			sidcookie.Expires = time.Now().Add(time.Hour * 24 * 7)
-			sidcookie.HttpOnly = true
-			sidcookie.Name = "sessionid"
-			sidcookie.Path = "/"
-			http.SetCookie(w, sidcookie)
+			sid := addSessionCookie(w)
 			r = r.WithContext(WithSID(r.Context(), sid))
 		} else {
 			sidcookie.Expires = time.Now().Add(time.Hour * 24 * 7)
+			http.SetCookie(w, sidcookie)
 		}
 		f.ServeHTTP(w, r)
 	}

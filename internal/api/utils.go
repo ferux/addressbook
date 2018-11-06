@@ -8,9 +8,13 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/ferux/addressbook/internal/models"
+
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -116,4 +120,16 @@ type middlewareFunc func(w http.ResponseWriter, r *http.Request)
 
 func (f middlewareFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	f(w, r)
+}
+
+func addSessionCookie(w http.ResponseWriter) string {
+	cookie := &http.Cookie{}
+	sid := uuid.New().String()
+	cookie.Value = sid
+	cookie.Expires = time.Now().Add(time.Hour * 24 * 7)
+	cookie.HttpOnly = true
+	cookie.Name = "sessionid"
+	cookie.Path = "/"
+	http.SetCookie(w, cookie)
+	return sid
 }

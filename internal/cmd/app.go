@@ -7,7 +7,7 @@ import (
 )
 
 func run(c *types.Config) error {
-	repo, err := db.NewV2(c.Database)
+	repo, err := db.New(c.Database)
 	if err != nil {
 		return err
 	}
