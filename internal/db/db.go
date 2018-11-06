@@ -1,10 +1,9 @@
 package db
 
 import (
-	"errors"
-	"io"
-	"log"
 	"time"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/ferux/addressbook/internal/types"
 
@@ -22,69 +21,54 @@ type Config struct {
 
 // Repo contains active connection to mgo.
 type Repo struct {
-	DB *mgo.Database
+	Session *mgo.Session
+	DB      *mgo.Database
+	conf    types.DB
+	logger  *logrus.Entry
 }
 
-var logger *log.Logger
-
-// NewV2 updated version of constructor.
-func NewV2(dbconf types.DB) (*Repo, error) {
-	repo, err := mgo.Dial(dbconf.Connection)
-	if err != nil {
-		return &Repo{}, err
+// New updated version of constructor.
+func New(dbconf types.DB) (*Repo, error) {
+	r := Repo{
+		conf: dbconf,
+		logger: logrus.New().WithFields(logrus.Fields{
+			"package": "db",
+			"entity":  "repo",
+		}),
 	}
-	var r Repo
-	r.DB = repo.DB(dbconf.Name)
-	return &r, nil
+
+	err := r.connect()
+	go r.keepConnection()
+	return &r, err
 }
 
-//New makes a new config file for start database connection
-// will be removed soon
-func New(_, _, _, _, _ string, _ time.Duration, _ int) (*Config, error) {
-
-	return &Config{}, nil
-}
-
-//CreateConnection creates connection to database and returns connection and error.
-func CreateConnection(c *Config, w io.Writer) (*mgo.Collection, error) {
-	logger = log.New(w, "[Database] ", log.Lshortfile+log.Ldate+log.Ltime)
-	logger.Printf("Opening connection to database: %s", c.Database)
-	session, err := func(tries int) (*mgo.Session, error) {
-		for tries > 0 {
-			session, err := mgo.DialWithTimeout(c.ConnString, c.Timeout)
-			if err != nil {
-				tries--
-				logger.Printf("Can't connect to mongoDB. Reason: %v", err)
-				logger.Printf("Reconnecting in 5 seconds (Attempt(s) left: %d)\n\n", tries)
-				time.Sleep(time.Second * 3)
-				continue
-			}
-			return session, nil
-		}
-		return nil, errors.New("Got a problem connecting to db. Check logs")
-	}(c.TryAmount)
-	if err != nil {
-		return nil, err
-	}
-	logger.Println("Connection to mongoDB was successful")
-	go checkConnection(session, w)
-	return session.DB(c.Database).C(c.Collection), nil
-}
-
-func checkConnection(session *mgo.Session, w io.Writer) {
-	logger := log.New(w, "[Database Connection Checker] ", log.Lshortfile+log.Ldate+log.Ltime)
-	ticker := time.NewTicker(time.Second * 5)
-	lostConnection := false
-	for range ticker.C {
-		if err := session.Ping(); err != nil {
-			logger.Println("Lost connection to database. Trying to reconnect")
-			lostConnection = true
-			session.Refresh()
+func (r *Repo) keepConnection() {
+	logger := r.logger.WithField("fn", "keepConnection")
+	for {
+		err := r.Session.Ping()
+		if err != nil {
+			logger.WithError(err).Error("can't ping database")
+			r.Session.Refresh()
+			time.Sleep(time.Second * 3)
 			continue
 		}
-		if lostConnection {
-			lostConnection = false
-			logger.Println("Connection to database has been restored")
-		}
+		time.Sleep(time.Second * 10)
 	}
+}
+
+func (r *Repo) connect() (err error) {
+	if r.Session != nil {
+		r.Session.Close()
+		r.Session = nil
+		r.DB = nil
+	}
+
+	r.Session, err = mgo.Dial(r.conf.Connection)
+	if err != nil {
+		return err
+	}
+	r.Session.SetSocketTimeout(time.Second * 15)
+	r.Session.SetSyncTimeout(time.Second * 15)
+	r.DB = r.Session.DB(r.conf.Name)
+	return nil
 }

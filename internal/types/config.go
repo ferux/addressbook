@@ -19,6 +19,6 @@ type DB struct {
 
 // API is a configuration of API
 type API struct {
-	Listen  string        `json:"listen,omitempty"`
-	Timeput time.Duration `json:"timeput,omitempty"`
+	Listen string        `json:"listen,omitempty"`
+	Timeot time.Duration `json:"timeout,omitempty"`
 }

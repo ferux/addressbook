@@ -1,4 +1,5 @@
 GO=go
+DEP=dep
 REV=$(shell git rev-parse --short HEAD)
 ENV=$(shell git rev-parse --abbrev-ref HEAD)
 VER=$(shell git describe --abbrev=0 --tags)
@@ -16,3 +17,9 @@ build:
 
 run: build
 	./bin/$(GOOS)-$(GOARCH)-$(PKGNAME)
+
+config:
+	cp example.config.json config.json
+
+init: config
+	$(DEP) ensure
