@@ -44,6 +44,7 @@ User = {
 ```
 
 The following table describes available API requests that the server can process:
+
 | Route                  | Method | Body      | Description                                                     | On Success           | On Error           |
 |------------------------|--------|-----------|-----------------------------------------------------------------|----------------------|--------------------|
 | /api/v1/book/          | GET    |           | Retrieves the full list of records in JSON format               | [ {User}, ...]       | {error: "Message"} |
