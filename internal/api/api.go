@@ -26,8 +26,8 @@ var (
 )
 
 // API serves requests from clients.
-// TODO: handle database reconnect
-// TODO: copy session before getting data from db
+// TODO: handle database reconnect id:20 gh:14
+// TODO: copy session before getting data from db id:22 gh:15
 type API struct {
 	db     *mgo.Database
 	logger *logrus.Entry
@@ -150,7 +150,7 @@ func (a *API) createUserHandler(w http.ResponseWriter, r *http.Request) {
 		a.handleError(err, w)
 		return
 	}
-	// TODO: handle this errors better.
+	// TODO: handle this errors better. id:24 gh:16
 	if errs := checkCorrectValues(user); errs != nil {
 		logger.Error("errs", errs)
 		w.Header().Add("content-type", "text/plain")
@@ -210,7 +210,7 @@ func (a *API) updateUserHandler(w http.ResponseWriter, r *http.Request) {
 	})
 	logger.Info()
 	user, err := findUser(r)
-	// TODO: better error handling.
+	// TODO: better error handling. id:29 gh:18
 	if err != nil {
 		http.Error(w, "something went wrong", http.StatusBadRequest)
 		return
