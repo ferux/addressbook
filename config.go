@@ -1,5 +1,7 @@
 package addressbook
 
+import "time"
+
 var (
 	// Version is an app version
 	Version string
@@ -15,6 +17,12 @@ var (
 
 	// StatusCode reports application status code
 	StatusCode Code
+
+	// StartedTime
+	StartedTime time.Time
+
+	// RequestsCount
+	RequestsCount uint64
 )
 
 // Code is a type for enums
@@ -44,20 +52,24 @@ func GetCodeText(c Code) string {
 
 //StatusReport for server reporting page
 type StatusReport struct {
-	Version    string `json:"version"`     // Version is an app version
-	Revision   string `json:"revision"`    // Revision is an app revision
-	Env        string `json:"env"`         // Env is current environment
-	Status     string `json:"status"`      // Status reports application status
-	StatusCode Code   `json:"status_code"` // StatusCode reports application status code
+	Version       string `json:"version"`                  // Version is an app version
+	Revision      string `json:"revision"`                 // Revision is an app revision
+	Env           string `json:"env"`                      // Env is current environment
+	Status        string `json:"status"`                   // Status reports application status
+	StatusCode    Code   `json:"status_code"`              // StatusCode reports application status code
+	StartedTime   string `json:"started_time,omitempty"`   // StartedTime
+	RequestsCount uint64 `json:"requests_count,omitempty"` // RequestsCount
 }
 
 // MakeReport creates new struct filled with actual values.
 func MakeReport() StatusReport {
 	return StatusReport{
-		Version:    Version,
-		Revision:   Revision,
-		Env:        Env,
-		Status:     Status,
-		StatusCode: StatusCode,
+		Version:       Version,
+		Revision:      Revision,
+		Env:           Env,
+		Status:        Status,
+		StatusCode:    StatusCode,
+		StartedTime:   StartedTime.Format(time.RFC3339),
+		RequestsCount: RequestsCount,
 	}
 }

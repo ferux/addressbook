@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"sync/atomic"
 	"time"
 
 	"github.com/ferux/addressbook"
@@ -61,6 +62,7 @@ func (a *API) sessionmw(f http.Handler) http.Handler {
 
 func (a *API) logmw(f http.Handler) http.Handler {
 	m := func(w http.ResponseWriter, r *http.Request) {
+		atomic.AddUint64(&addressbook.RequestsCount, 1)
 		requestID := uuid.New().String()
 		a.logger.WithFields(logrus.Fields{
 			"request":   r.RequestURI,
@@ -94,6 +96,7 @@ func (a *API) Run() error {
 	}()
 	addressbook.StatusCode = addressbook.Running
 	addressbook.Status = "You can use this microservice"
+	addressbook.StartedTime = time.Now()
 	err := <-errc
 	addressbook.StatusCode = addressbook.HaveProblems
 	addressbook.Status = "Error: " + err.Error()
