@@ -33,7 +33,7 @@ func (c *User) SelectUser(id bson.ObjectId) (*models.User, error) {
 }
 
 // ListUsers func
-func (c *User) ListUsers() (*[]models.User, error) {
+func (c *User) ListUsers() ([]models.User, error) {
 	return models.ListUsers(c.DB.C(collection))
 }
 
