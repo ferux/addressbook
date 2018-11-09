@@ -1,11 +1,19 @@
 package api
 
-import "github.com/gorilla/mux"
+import (
+	"encoding/json"
+	"net/http"
+
+	"github.com/ferux/addressbook"
+	"github.com/gorilla/mux"
+)
 
 func (a *API) registerRoutes() *mux.Router {
 	r := mux.NewRouter()
 
 	r.Use(a.sessionmw, a.logmw)
+
+	r.HandleFunc("/status", handleServerStatus)
 
 	r.NotFoundHandler = a.sessionmw(a.logmw(a.notFoundHandler()))
 	rv1 := r.PathPrefix("/api/v1/book").Subrouter()
@@ -18,4 +26,11 @@ func (a *API) registerRoutes() *mux.Router {
 	rv1.HandleFunc("/user/{id}", a.deleteUserHandler).Methods("DELETE")
 	rv1.HandleFunc("/export", a.downloadCSVHandler).Methods("GET")
 	return r
+}
+
+func handleServerStatus(w http.ResponseWriter, _ *http.Request) {
+	st := addressbook.MakeReport()
+	w.Header().Add("content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(&st)
 }

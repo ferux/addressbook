@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ferux/addressbook"
+
 	"github.com/ferux/addressbook/internal/controllers"
 	"github.com/ferux/addressbook/internal/models"
 	"github.com/ferux/addressbook/internal/types"
@@ -86,7 +88,16 @@ func (a *API) notFoundHandler() http.Handler {
 func (a *API) Run() error {
 	a.logger.WithField("listen", a.conf.Listen).Info("starting api")
 	router := a.registerRoutes()
-	return http.ListenAndServe(a.conf.Listen, router)
+	errc := make(chan error)
+	go func() {
+		errc <- http.ListenAndServe(a.conf.Listen, router)
+	}()
+	addressbook.StatusCode = addressbook.Running
+	addressbook.Status = "You can use this microservice"
+	err := <-errc
+	addressbook.StatusCode = addressbook.HaveProblems
+	addressbook.Status = "Error: " + err.Error()
+	return err
 }
 
 func (a *API) handleError(err error, w http.ResponseWriter) {
