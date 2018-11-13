@@ -13,7 +13,7 @@ func (a *API) registerRoutes() *mux.Router {
 
 	r.Use(a.sessionControl, a.logRequests)
 
-	r.HandleFunc("/status", handleServerStatus)
+	r.HandleFunc("/status", a.handleServerStatus)
 
 	r.NotFoundHandler = a.sessionControl(a.logRequests(a.notFoundHandler()))
 	rv1 := r.PathPrefix("/api/v1/book").Subrouter()
@@ -28,8 +28,9 @@ func (a *API) registerRoutes() *mux.Router {
 	return r
 }
 
-func handleServerStatus(w http.ResponseWriter, _ *http.Request) {
+func (a *API) handleServerStatus(w http.ResponseWriter, _ *http.Request) {
 	st := addressbook.MakeReport()
+	st.DatabaseStatus = a.repo.GetStatus()
 	w.Header().Add("content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(&st)

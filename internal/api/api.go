@@ -9,6 +9,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/ferux/addressbook/internal/db"
+
 	"github.com/ferux/addressbook"
 
 	"github.com/ferux/addressbook/internal/controllers"
@@ -31,15 +33,17 @@ var (
 // API serves requests from clients.
 // TODO: copy session before getting data from db id:22 gh:15
 type API struct {
+	repo   *db.Repo
 	db     *controllers.Controller
 	logger *logrus.Entry
 	conf   types.API
 }
 
 // NewAPI creates new instance of API.
-func NewAPI(dbconn *mgo.Database, apiconf types.API) *API {
+func NewAPI(repo *db.Repo, apiconf types.API) *API {
 	return &API{
-		db:     controllers.NewController(dbconn),
+		repo:   repo,
+		db:     controllers.NewController(repo.DB),
 		logger: logrus.New().WithField("pkg", "daemon"),
 		conf:   apiconf,
 	}
