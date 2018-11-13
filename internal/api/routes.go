@@ -11,11 +11,11 @@ import (
 func (a *API) registerRoutes() *mux.Router {
 	r := mux.NewRouter()
 
-	r.Use(a.sessionmw, a.logmw)
+	r.Use(a.sessionControl, a.logRequests)
 
 	r.HandleFunc("/status", handleServerStatus)
 
-	r.NotFoundHandler = a.sessionmw(a.logmw(a.notFoundHandler()))
+	r.NotFoundHandler = a.sessionControl(a.logRequests(a.notFoundHandler()))
 	rv1 := r.PathPrefix("/api/v1/book").Subrouter()
 	rv1.HandleFunc("", a.helloHandler).Methods("GET")
 	rv1.HandleFunc("/", a.helloHandler).Methods("GET")

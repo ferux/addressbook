@@ -18,10 +18,10 @@ var (
 	// StatusCode reports application status code
 	StatusCode Code
 
-	// StartedTime
+	// StartedTime reports then server has been started
 	StartedTime time.Time
 
-	// RequestsCount
+	// RequestsCount shows how many requests has been done so far
 	RequestsCount uint64
 )
 

@@ -8,6 +8,8 @@ GOARCH?=amd64
 PKG=$(shell go list ./... | head -1)
 PKGNAME=$(shell $(GO) list ./... | head -1 | sed -e 's/.*\///')
 
+.PHONY: info build run config init
+
 info:
 	@printf "Rev  $(REV)\nEnv  $(ENV)\nVer  $(VER)\nOS   $(GOOS)\nARCH $(GOARCH)\nPKG  $(PKG)\nNAME $(PKGNAME)\n"
 

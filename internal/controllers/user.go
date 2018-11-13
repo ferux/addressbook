@@ -7,47 +7,47 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-const collection = "users"
+const userCollection = "users"
 
 // User controller type uses collection to manipulate data
-type User struct{ DB *mgo.Database }
+type User struct{ Collection *mgo.Collection }
 
 // CreateUser func
 func (c *User) CreateUser(u *models.User) (bson.ObjectId, error) {
-	return models.CreateUser(c.DB.C(collection), u)
+	return models.CreateUser(c.Collection, u)
 }
 
 // UpdateUser func
 func (c *User) UpdateUser(u *models.User) error {
-	return models.UpdateUser(c.DB.C(collection), u)
+	return models.UpdateUser(c.Collection, u)
 }
 
 // DeleteUser func
 func (c *User) DeleteUser(id bson.ObjectId) error {
-	return models.DeleteUser(c.DB.C(collection), id)
+	return models.DeleteUser(c.Collection, id)
 }
 
 // SelectUser func
 func (c *User) SelectUser(id bson.ObjectId) (*models.User, error) {
-	return models.SelectUser(c.DB.C(collection), id)
+	return models.SelectUser(c.Collection, id)
 }
 
 // ListUsers func
 func (c *User) ListUsers() ([]models.User, error) {
-	return models.ListUsers(c.DB.C(collection))
+	return models.ListUsers(c.Collection)
 }
 
 // UploadUser func
 func (c *User) UploadUser(u *models.User) error {
-	return models.UploadUser(c.DB.C(collection), u)
+	return models.UploadUser(c.Collection, u)
 }
 
 // UpsertUser func
 func (c *User) UpsertUser(u *models.User) error {
-	return models.UpsertUser(c.DB.C(collection), u)
+	return models.UpsertUser(c.Collection, u)
 }
 
 // CleanRecords func
 func (c *User) CleanRecords() error {
-	return models.CleanRecords(c.DB.C(collection))
+	return models.CleanRecords(c.Collection)
 }

@@ -31,7 +31,7 @@ var (
 // API serves requests from clients.
 // TODO: copy session before getting data from db id:22 gh:15
 type API struct {
-	db     *mgo.Database
+	db     *controllers.Controller
 	logger *logrus.Entry
 	conf   types.API
 }
@@ -39,13 +39,13 @@ type API struct {
 // NewAPI creates new instance of API.
 func NewAPI(dbconn *mgo.Database, apiconf types.API) *API {
 	return &API{
-		db:     dbconn,
+		db:     controllers.NewController(dbconn),
 		logger: logrus.New().WithField("pkg", "daemon"),
 		conf:   apiconf,
 	}
 }
 
-func (a *API) sessionmw(f http.Handler) http.Handler {
+func (a *API) sessionControl(f http.Handler) http.Handler {
 	m := func(w http.ResponseWriter, r *http.Request) {
 		sidcookie, err := r.Cookie("sessionid")
 		if err != nil {
@@ -60,7 +60,7 @@ func (a *API) sessionmw(f http.Handler) http.Handler {
 	return middlewareFunc(m)
 }
 
-func (a *API) logmw(f http.Handler) http.Handler {
+func (a *API) logRequests(f http.Handler) http.Handler {
 	m := func(w http.ResponseWriter, r *http.Request) {
 		atomic.AddUint64(&addressbook.RequestsCount, 1)
 		requestID := uuid.New().String()
@@ -152,7 +152,7 @@ func (a *API) listUsersHandler(w http.ResponseWriter, r *http.Request) {
 		"fn":        "listUsersHandler",
 	})
 	logger.Info()
-	users, err := (&controllers.User{DB: a.db}).ListUsers()
+	users, err := a.db.User().ListUsers()
 	if err != nil {
 		logger.WithError(err).Error("can't get users list")
 		err = wrapError("error getting userlist", r, http.StatusInternalServerError, err)
@@ -185,7 +185,7 @@ func (a *API) createUserHandler(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(errs)
 		return
 	}
-	id, err := (&controllers.User{DB: a.db}).CreateUser(&user)
+	id, err := a.db.User().CreateUser(&user)
 	if err != nil {
 		a.logger.WithError(err).Error("can't insert user")
 		err = wrapError("can't create user", r, http.StatusInternalServerError, err)
@@ -213,7 +213,7 @@ func (a *API) selectUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	c := &controllers.User{DB: a.db}
+	c := a.db.User()
 	id := bson.ObjectIdHex(varsID)
 	user, err := c.SelectUser(id)
 	if err != nil {
@@ -240,7 +240,7 @@ func (a *API) updateUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := (&controllers.User{DB: a.db}).UpdateUser(user); err != nil {
+	if err := a.db.User().UpdateUser(user); err != nil {
 		logger.WithError(err).Error("can't update data")
 		err = wrapError("can't update user's info", r, http.StatusBadRequest, err)
 		a.handleError(err, w)
@@ -266,7 +266,7 @@ func (a *API) deleteUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id := bson.ObjectIdHex(varsID)
-	err := (&controllers.User{DB: a.db}).DeleteUser(id)
+	err := a.db.User().DeleteUser(id)
 	if err != nil {
 		logger.WithError(err).Error("can't delete user")
 		err = wrapError("can't delete user", r, http.StatusBadRequest, err)
@@ -284,7 +284,7 @@ func (a *API) downloadCSVHandler(w http.ResponseWriter, r *http.Request) {
 		"requestID": GetRID(r.Context()),
 		"fn":        "updateUserHandler",
 	})
-	users, err := (&controllers.User{DB: a.db}).ListUsers()
+	users, err := a.db.User().ListUsers()
 	if err != nil {
 		logger.WithError(err).Error("can't get users list")
 		err = wrapError("error getting userlist", r, http.StatusInternalServerError, err)
