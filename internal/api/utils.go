@@ -32,18 +32,25 @@ type ResponseError struct {
 	RequestID string `json:"request_id"`
 	Message   string `json:"message"`
 	Code      int    `json:"code"`
+	origin    error
 }
 
 func (e *ResponseError) Error() string {
 	return fmt.Sprintf("reqid=%s msg=%s code=%d", e.RequestID, e.Message, e.Code)
 }
 
-func wrapError(msg string, r *http.Request, code int) *ResponseError {
+// GetOrigin returns core error, not wrapped.
+func (e *ResponseError) GetOrigin() error {
+	return e.origin
+}
+
+func wrapError(msg string, r *http.Request, code int, err error) *ResponseError {
 	rid := GetRID(r.Context())
 	return &ResponseError{
 		RequestID: rid,
 		Message:   msg,
 		Code:      code,
+		origin:    err,
 	}
 }
 

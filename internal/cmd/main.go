@@ -12,6 +12,12 @@ import (
 
 var logger *log.Logger
 
+var availableEnvs = map[string]struct{}{
+	"production": struct{}{},
+	"develop":    struct{}{},
+	"staging":    struct{}{},
+}
+
 func loadConfig() *types.Config {
 	conf := types.Config{}
 	data, err := ioutil.ReadFile("./config.json")
@@ -29,6 +35,9 @@ func main() {
 	w := ioutil.Discard
 	if conf.Debug {
 		w = os.Stdout
+	}
+	if _, ok := availableEnvs[addressbook.Env]; !ok {
+		addressbook.Env = "develop"
 	}
 	logger = log.New(w, "AddressBook ", log.Ltime)
 	logger.Printf("started app ver=%s rev=%s env=%s", addressbook.Version, addressbook.Revision, addressbook.Env)

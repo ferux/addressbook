@@ -11,6 +11,6 @@ func run(c *types.Config) error {
 	if err != nil {
 		return err
 	}
-	api := api.NewAPI(repo.DB, c.API)
+	api := api.NewAPI(repo, c.API)
 	return api.Run()
 }
