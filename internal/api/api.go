@@ -44,6 +44,7 @@ func NewAPI(dbconn *mgo.Database, apiconf types.API) *API {
 }
 
 func (a *API) sessionmw(f http.Handler) http.Handler {
+	// TODO: enchant session to be more secure.
 	m := func(w http.ResponseWriter, r *http.Request) {
 		sidcookie, err := r.Cookie("sessionid")
 		if err != nil {
