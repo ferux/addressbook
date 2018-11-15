@@ -3,6 +3,8 @@ package db
 import (
 	"time"
 
+	"github.com/ferux/addressbook"
+
 	"github.com/sirupsen/logrus"
 
 	"github.com/ferux/addressbook/internal/types"
@@ -25,6 +27,7 @@ type Repo struct {
 	DB      *mgo.Database
 	conf    types.DB
 	logger  *logrus.Entry
+	status  addressbook.Code
 }
 
 // New updated version of constructor.
@@ -35,6 +38,7 @@ func New(dbconf types.DB) (*Repo, error) {
 			"package": "db",
 			"entity":  "repo",
 		}),
+		status: addressbook.Unknown,
 	}
 
 	err := r.connect()
@@ -47,11 +51,13 @@ func (r *Repo) keepConnection() {
 	for {
 		err := r.Session.Ping()
 		if err != nil {
+			r.status = addressbook.HaveProblems
 			logger.WithError(err).Error("can't ping database")
 			r.Session.Refresh()
 			time.Sleep(time.Second * 3)
 			continue
 		}
+		r.status = addressbook.Running
 		time.Sleep(time.Second * 10)
 	}
 }
@@ -71,4 +77,9 @@ func (r *Repo) connect() (err error) {
 	r.Session.SetSyncTimeout(time.Second * 15)
 	r.DB = r.Session.DB(r.conf.Name)
 	return nil
+}
+
+// GetStatus returns current status
+func (r *Repo) GetStatus() addressbook.Code {
+	return r.status
 }

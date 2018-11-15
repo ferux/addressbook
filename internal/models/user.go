@@ -7,6 +7,11 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
+var (
+	// ErrAlreadyExists is an error returned by CreateUserFunction when the user already exists.
+	ErrAlreadyExists = errors.New("user already exists")
+)
+
 //User struct describes the structure of user object
 type User struct {
 	ID        bson.ObjectId `json:"id" bson:"_id,omitempty"`
@@ -20,6 +25,9 @@ type User struct {
 func CreateUser(db *mgo.Collection, u *User) (bson.ObjectId, error) {
 	if u == nil {
 		return "", errors.New("Nil pointer to User struct")
+	}
+	if isExistByFilter(db, bson.M{"phone": u.Phone}) || isExistByEmail(db, u.Email) {
+		return "", ErrAlreadyExists
 	}
 	u.ID = bson.NewObjectId()
 	if err := db.Insert(&u); err != nil {
@@ -54,6 +62,24 @@ func SelectUser(db *mgo.Collection, id bson.ObjectId) (*User, error) {
 	return &u, nil
 }
 
+// isExistByEmail checks if the user exists
+func isExistByEmail(db *mgo.Collection, email string) bool {
+	n, _ := db.Find(bson.M{"email": email}).Count()
+	if n > 0 {
+		return true
+	}
+	return false
+}
+
+// isExistByFilter checks if the user exists.
+func isExistByFilter(db *mgo.Collection, filter bson.M) bool {
+	n, _ := db.Find(filter).Count()
+	if n > 0 {
+		return true
+	}
+	return false
+}
+
 //UpdateUser updates a user info
 func UpdateUser(db *mgo.Collection, u *User) error {
 	return db.UpdateId(u.ID, &u)
@@ -65,12 +91,16 @@ func DeleteUser(db *mgo.Collection, id bson.ObjectId) error {
 }
 
 //ListUsers returns the list of all users
-func ListUsers(db *mgo.Collection) (*[]User, error) {
-	users := make([]User, 0, 1)
-	if err := db.Find(nil).All(&users); err != nil {
+func ListUsers(db *mgo.Collection) ([]User, error) {
+	users := make([]User, 0)
+	err := db.Find(nil).All(&users)
+	if err != nil {
+		if err == mgo.ErrNotFound {
+			return users, err
+		}
 		return nil, err
 	}
-	return &users, nil
+	return users, nil
 }
 
 //CleanRecords erases all records at the collection
