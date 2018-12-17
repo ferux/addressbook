@@ -38,7 +38,7 @@ type API struct {
 func NewAPI(dbconn *mgo.Database, apiconf types.API) *API {
 	return &API{
 		db:     dbconn,
-		logger: logrus.New().WithField("pkg", "daemon"),
+		logger: logrus.New().WithField("pkg", "api"),
 		conf:   apiconf,
 	}
 }
